@@ -20,7 +20,7 @@ ox.settings.log_console = True
 
 COLUMNS = ["railway", "service"]
 
-OUTPATH = "geodata/gpkg/bdr-rail.gpkg"
+OUTPATH = "output/aquitaine-rail.gpkg"
 
 CRS = "EPSG:2154" # France national grid
 RGF93 = "EPSG:2154"
@@ -112,7 +112,7 @@ def simplify_network(railway):
 def main():
     log("Starting...")
 
-    polygon = read_dataframe("geodata/bdr.geojson")
+    polygon = read_dataframe("data/aquitaine.geojson")
     log(f'First affectation to "polygon" -> type: {type(polygon)}')
     log(f'Initial CRS of polygon: {polygon.crs}')
 
@@ -145,7 +145,7 @@ def main():
 
     output = r.to_json(na="drop", drop_id=True)
     
-    with open("geodata/output/bdr-rail.geojson", "w", encoding="utf8") as fout:
+    with open("output/aquitaine-rail.geojson", "w", encoding="utf8") as fout:
         fout.write(output)
 
     log("Finished")
