@@ -1,2 +1,2 @@
 # rail_and_workshop
-Rail and workshop network in Europe.
+Rails and workshops network in Europe.
