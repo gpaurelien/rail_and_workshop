@@ -1,20 +1,17 @@
 import json
 from functools import partial
-
+import numpy as np
 import pandas as pd
 import geopandas as gp
 import networkx as nx
 import osmnx as ox
-import numpy as np
 from osmnx.utils import log
 from pyogrio import read_dataframe, write_dataframe
-
 from shapely.geometry import shape, Point, LineString
 from shapely.ops import nearest_points
 from shapely import set_precision
 
 ox.settings.max_query_area_size = 5000000000
-
 ox.settings.use_cache = True
 ox.settings.log_console = True
 
@@ -88,21 +85,13 @@ def simplify_network(railway):
     node, edge = gp.GeoDataFrame(), gp.GeoDataFrame()
 
     for k, v in rail_group.items():
-        # print(f'k = {k} et v = {v}')
-
         log(f'For values (key) {k}: ')
         i, j = get_simplified_nx(railway, v, k) # i = nodes, j = edges
-
-        # display(j)
 
         if i.empty or j.empty:
             continue
 
         i, j = i.reset_index().fillna(""), j.reset_index().fillna("")
-        
-        """j[COLUMNS] = k
-
-        print(f'j[COLUMNS] = {j[COLUMNS]}, et k = {k}')"""
 
         node = pd.concat([i, node])
         edge = pd.concat([j, edge])
@@ -132,10 +121,8 @@ def main():
     r = node.reset_index().fillna("").to_crs(CRS)
     r["geometry"] = r["geometry"].map(set_precision_one)
 
-    log("Output GeoPKG nodes")
+    log("Output GPKG nodes")
     write_dataframe(r, OUTPATH, layer="node")
-
-    # node["geometry"] = node["geometry"].map(set_precision_one) ?
 
     r = edge.reset_index().fillna("").to_crs(CRS)
     r["geometry"] = r["geometry"].map(set_precision_one)
