@@ -1,4 +1,3 @@
-import json
 from functools import partial
 import numpy as np
 import pandas as pd
@@ -7,21 +6,15 @@ import networkx as nx
 import osmnx as ox
 from osmnx.utils import log
 from pyogrio import read_dataframe, write_dataframe
-from shapely.geometry import shape, Point, LineString
-from shapely.ops import nearest_points
 from shapely import set_precision
 
-ox.settings.max_query_area_size = 5000000000
+# ox.settings.max_query_area_size = 5000000000
 ox.settings.use_cache = True
 ox.settings.log_console = True
 
 COLUMNS = ["railway", "service"]
-
 OUTPATH = "output/aquitaine-rail.gpkg"
-
-CRS = "EPSG:2154" # France national grid
-RGF93 = "EPSG:2154"
-WGS84 = "EPSG:4326"
+CRS = "EPSG:2154"
 
 pd.set_option("display.max_columns", None)
 set_precision_one = partial(set_precision, grid_size=1.0)
@@ -33,15 +26,15 @@ def get_node_group(graph, key):
     """
 
     edge = ox.graph_to_gdfs(graph, nodes=False)
-    edgeFilled = edge[key].fillna("").groupby(COLUMNS) # GroupBy object
+    edgeFilled = edge[key].fillna("").groupby(COLUMNS)
 
     group = dict(list(edgeFilled))
 
     res = {}
 
-    for k, v in group.items():
-        node_id = v.reset_index().values[:, 0:2].reshape(-1) # 'values[:, 0:2]' means that we want every rows from the first 2 columns (= node ids)
-        res[k] = np.unique(node_id)
+    for key, value in group.items():
+        node_id = value.reset_index().values[:, 0:2].reshape(-1) # 'values[:, 0:2]' means that we want every rows from the first 2 columns (= node ids)
+        res[key] = np.unique(node_id)
 
     return res
 
@@ -59,15 +52,17 @@ def get_simplified_nx(graph, node_id, key):
     return node, edge
 
 def get_network(POLYGON):
-    log("Downloading railway")
+    log("Downloading railway..")
 
     ox.settings.useful_tags_way += ['railway', 'service']
 
     include = 'yard'
 
-    cf = f'["service"~"{include}"]'
+    exclude = (
 
-    log("Creating network")
+    )
+
+    cf = f'["service"~"{include}"]'
 
     railway = ox.graph_from_polygon(
         POLYGON, 
@@ -102,18 +97,12 @@ def main():
     log("Starting...")
 
     polygon = read_dataframe("data/aquitaine.geojson")
-    log(f'First affectation to "polygon" -> type: {type(polygon)}')
-    log(f'Initial CRS of polygon: {polygon.crs}')
 
     polygon = polygon.explode(index_parts=False).reset_index(drop=True)
-    log(f'Second affectation to "polygon" -> type: {type(polygon)}')
 
     polygon = polygon.loc[polygon.area.sort_values(ascending=False).index]
-    log(f'Third affectation to "polygon" -> type: {type(polygon)}')
-    log(f'CRS after explosion and sorting: {polygon.crs}')
 
-    polygon = polygon.to_crs(RGF93).geometry.iloc[0]
-    log(f'Last affectation to "polygon" -> type: {type(polygon)}')
+    polygon = polygon.to_crs(CRS).geometry.iloc[0]
 
     railway = get_network(polygon)
     node, edge = simplify_network(railway)
