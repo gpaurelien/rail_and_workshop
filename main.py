@@ -56,7 +56,11 @@ def get_network(POLYGON):
 
     ox.settings.useful_tags_way += ['railway', 'service']
 
-    include = 'yard'
+    # include = 'yard'
+
+    include = (
+
+    )
 
     exclude = (
 
@@ -97,11 +101,8 @@ def main():
     log("Starting...")
 
     polygon = read_dataframe("data/aquitaine.geojson")
-
     polygon = polygon.explode(index_parts=False).reset_index(drop=True)
-
     polygon = polygon.loc[polygon.area.sort_values(ascending=False).index]
-
     polygon = polygon.to_crs(CRS).geometry.iloc[0]
 
     railway = get_network(polygon)
